@@ -26,11 +26,26 @@ export async function POST(request: Request) {
 
     const data = await response.json();
     return NextResponse.json(data);
-  } catch (error: unknown) {
-    const errorMessage = error instanceof Error ? error.message : String(error);
-    console.error("Error in /api/generate-excel proxy:", error);
+  } catch (error: any) {
+    const errorMessage = error?.message || String(error);
+    const cause = error?.cause ? (error.cause.message || String(error.cause)) : null;
+    const systemCode = error?.cause?.code || error?.code || null;
+    const targetUrl = `${process.env.PYTHON_SERVICE_URL || "http://localhost:8000"}/generate_excel`;
+    
+    console.error("Error in /api/generate-excel proxy:", {
+      message: errorMessage,
+      cause: cause,
+      code: systemCode,
+      targetUrl: targetUrl
+    });
+
     return NextResponse.json(
-      { error: `Internal server error: ${errorMessage}` },
+      { 
+        error: `Internal server error: ${errorMessage}`,
+        cause: cause,
+        code: systemCode,
+        targetUrl: targetUrl
+      },
       { status: 500 }
     );
   }
