@@ -155,8 +155,15 @@ export default function Page() {
       setLoadingStep("Structuring tasks with local parsing engine...");
 
       if (!response.ok) {
-        const errData = await response.json();
-        throw new Error(errData.error || "Failed to convert document");
+        const errData = await response.json().catch(() => ({}));
+        let msg = errData.error || "Failed to convert document";
+        if (errData.cause) {
+          msg += ` (Cause: ${errData.cause})`;
+        }
+        if (errData.targetUrl) {
+          msg += ` [Calling: ${errData.targetUrl}]`;
+        }
+        throw new Error(msg);
       }
 
       const data = await response.json();
