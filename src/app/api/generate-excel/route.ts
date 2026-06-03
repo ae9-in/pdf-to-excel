@@ -5,7 +5,8 @@ export async function POST(request: Request) {
     const body = await request.json();
 
     // Forward to Python service
-    const targetUrl = `${process.env.PYTHON_SERVICE_URL || "http://localhost:8000"}/generate_excel`;
+    const targetBaseUrl = process.env.PYTHON_SERVICE_URL || process.env.NEXT_PUBLIC_PYTHON_SERVICE_URL || "http://localhost:8000";
+    const targetUrl = `${targetBaseUrl}/generate_excel`;
     console.log("[PROXY] Forwarding request to Python service:", targetUrl);
 
     const response = await fetch(targetUrl, {
@@ -30,7 +31,8 @@ export async function POST(request: Request) {
     const errorMessage = error?.message || String(error);
     const cause = error?.cause ? (error.cause.message || String(error.cause)) : null;
     const systemCode = error?.cause?.code || error?.code || null;
-    const targetUrl = `${process.env.PYTHON_SERVICE_URL || "http://localhost:8000"}/generate_excel`;
+    const targetBaseUrl = process.env.PYTHON_SERVICE_URL || process.env.NEXT_PUBLIC_PYTHON_SERVICE_URL || "http://localhost:8000";
+    const targetUrl = `${targetBaseUrl}/generate_excel`;
     
     console.error("Error in /api/generate-excel proxy:", {
       message: errorMessage,

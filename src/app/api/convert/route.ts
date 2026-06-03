@@ -10,7 +10,8 @@ export async function POST(request: Request) {
     }
 
     // Forward to Python service
-    const targetUrl = `${process.env.PYTHON_SERVICE_URL || "http://localhost:8000"}/convert`;
+    const targetBaseUrl = process.env.PYTHON_SERVICE_URL || process.env.NEXT_PUBLIC_PYTHON_SERVICE_URL || "http://localhost:8000";
+    const targetUrl = `${targetBaseUrl}/convert`;
     console.log("[PROXY] Forwarding request to Python service:", targetUrl);
     
     const backendFormData = new FormData();
@@ -35,7 +36,8 @@ export async function POST(request: Request) {
     const errorMessage = error?.message || String(error);
     const cause = error?.cause ? (error.cause.message || String(error.cause)) : null;
     const systemCode = error?.cause?.code || error?.code || null;
-    const targetUrl = `${process.env.PYTHON_SERVICE_URL || "http://localhost:8000"}/convert`;
+    const targetBaseUrl = process.env.PYTHON_SERVICE_URL || process.env.NEXT_PUBLIC_PYTHON_SERVICE_URL || "http://localhost:8000";
+    const targetUrl = `${targetBaseUrl}/convert`;
     
     console.error("Error in /api/convert proxy:", {
       message: errorMessage,
