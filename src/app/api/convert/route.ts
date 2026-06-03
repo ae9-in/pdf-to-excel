@@ -25,7 +25,10 @@ export async function POST(request: Request) {
     if (!response.ok) {
       const errorText = await response.text();
       return NextResponse.json(
-        { error: `Backend service error: ${errorText || response.statusText}` },
+        { 
+          error: `Backend service error: ${errorText || response.statusText}`,
+          targetUrl: targetUrl
+        },
         { status: response.status }
       );
     }
