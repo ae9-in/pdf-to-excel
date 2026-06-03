@@ -1,6 +1,6 @@
 # EarlyBird Convert — PDF / DOCX → Excel
 
-Convert Task Allocation documents (PDF, DOCX, DOC) to a structured Excel sheet using AI-powered parsing.
+Convert Task Allocation documents (PDF, DOCX, DOC) to a structured Excel sheet using a deterministic offline parsing engine. Saves conversion results automatically to MongoDB.
 
 ---
 
@@ -11,10 +11,18 @@ Convert Task Allocation documents (PDF, DOCX, DOC) to a structured Excel sheet u
 │  Next.js Frontend (Vercel)  │──HTTP──▶│  FastAPI Backend (Railway) │
 │  /api/convert  (proxy)      │        │  /convert                 │
 └─────────────────────────────┘        └───────────────────────────┘
+                                                     │
+                                               (Save Results)
+                                                     │
+                                                     ▼
+                                          ┌──────────────────────┐
+                                          │     MongoDB Atlas    │
+                                          └──────────────────────┘
 ```
 
 - **Frontend** — Next.js 15, deployed on **Vercel**
 - **Backend** — FastAPI (Python), deployed on **Railway** (or Render/Fly.io)
+- **Database** — MongoDB (for storing history and parsed results)
 
 ---
 
@@ -31,7 +39,7 @@ venv\Scripts\activate
 source venv/bin/activate
 
 pip install -r requirements.txt
-cp .env.example .env   # fill in your ANTHROPIC_API_KEY
+cp .env.example .env   # fill in your MONGODB_URI
 
 uvicorn main:app --reload --port 8000
 ```
@@ -49,34 +57,25 @@ Open [http://localhost:3000](http://localhost:3000).
 
 ---
 
-## Production Deployment
+## Production Deployment & Build Commands
 
 ### Backend → Railway (or Render)
 
-1. Go to [railway.app](https://railway.app) → **New Project** → **Deploy from GitHub repo**
-2. Select the `pdf_service/` folder as the root directory
-3. Add environment variables in the Railway dashboard (copy from `pdf_service/.env.example`)
-4. Railway auto-detects the `Procfile` and runs:
-   ```
-   uvicorn main:app --host 0.0.0.0 --port $PORT
-   ```
-5. Copy the generated URL (e.g. `https://pdf-service-production.up.railway.app`)
+- **Build Command / Nixpacks config**: Auto-detected (FastAPI / python)
+- **Start Command**: `uvicorn main:app --host 0.0.0.0 --port $PORT` (defined in `pdf_service/Procfile`)
+- **Environment Variables**:
+  - `MONGODB_URI`: `mongodb+srv://user:password@cluster.mongodb.net/?appName=Cluster0`
 
 ### Frontend → Vercel
 
-1. Push this repository to GitHub
-2. Go to [vercel.com](https://vercel.com) → **New Project** → Import the repo
-3. Set these **Environment Variables** in Vercel:
-   | Variable | Value |
-   |---|---|
-   | `PYTHON_SERVICE_URL` | `https://your-backend.railway.app` |
-   | `NEXT_PUBLIC_MAX_FILE_SIZE_MB` | `50` |
-   | `NEXT_PUBLIC_APP_NAME` | `EarlyBird Convert` |
-4. **Build settings** (auto-detected from `vercel.json`):
-   - Framework: Next.js
-   - Build Command: `npm run build`
-   - Output Directory: `.next`
-5. Click **Deploy** ✓
+- **Framework Preset**: Next.js
+- **Build Command**: `npm run build`
+- **Output Directory**: `.next`
+- **Install Command**: `npm install`
+- **Environment Variables**:
+  - `PYTHON_SERVICE_URL`: `https://your-backend.railway.app`
+  - `NEXT_PUBLIC_MAX_FILE_SIZE_MB`: `50`
+  - `NEXT_PUBLIC_APP_NAME`: `EarlyBird Convert`
 
 ---
 
@@ -86,8 +85,7 @@ Open [http://localhost:3000](http://localhost:3000).
 |---|---|---|
 | `.env.local` | `PYTHON_SERVICE_URL` | URL of the Python backend |
 | `.env.local` | `NEXT_PUBLIC_MAX_FILE_SIZE_MB` | Max upload size shown in UI |
-| `pdf_service/.env` | `ANTHROPIC_API_KEY` | Claude API key |
-| `pdf_service/.env` | `ANTHROPIC_MODEL` | Claude model (optional) |
+| `pdf_service/.env` | `MONGODB_URI` | MongoDB Connection String |
 
 ---
 
@@ -95,8 +93,8 @@ Open [http://localhost:3000](http://localhost:3000).
 
 | Type | Extension | Parser |
 |---|---|---|
-| PDF | `.pdf` | pdfplumber + Claude AI |
-| Word (modern) | `.docx` | python-docx + Claude AI |
+| PDF | `.pdf` | pdfplumber + Deterministic Regex Parsing |
+| Word (modern) | `.docx` | python-docx + Deterministic Regex Parsing |
 | Word (legacy) | `.doc` | docx2txt fallback |
 
 ---

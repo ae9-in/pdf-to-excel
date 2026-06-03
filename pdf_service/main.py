@@ -6,6 +6,8 @@ import base64
 import os
 from pathlib import Path
 from dotenv import load_dotenv
+import pymongo
+from datetime import datetime
 
 # Load env variables
 load_dotenv()
@@ -20,6 +22,50 @@ from extraction import (
 from ai_parser import parse_tasks_with_llm
 from excel_generator import generate_excel
 from models import ConversionResult
+
+# Initialize MongoDB client
+mongo_uri = os.environ.get("MONGODB_URI")
+db = None
+conversions_col = None
+
+if mongo_uri:
+    try:
+        print("[MONGO] Connecting to MongoDB...")
+        # Timeout after 5 seconds if connection cannot be established
+        mongo_client = pymongo.MongoClient(mongo_uri, serverSelectionTimeoutMS=5000)
+        # Verify connection
+        mongo_client.server_info()
+        db_name = pymongo.uri_parser.parse_uri(mongo_uri).get("database") or "pdf_to_excel"
+        db = mongo_client[db_name]
+        conversions_col = db["conversions"]
+        print(f"[MONGO] Connected successfully to database: {db_name}")
+    except Exception as e:
+        print(f"[MONGO] Failed to connect: {e}")
+else:
+    print("[MONGO] MONGODB_URI not set in environment.")
+
+
+def save_conversion_to_db(filename: str, result: ConversionResult) -> str:
+    if conversions_col is not None:
+        try:
+            doc = {
+                "filename": filename,
+                "timestamp": datetime.utcnow(),
+                "sprint_title": result.sprint_title,
+                "organisation": result.organisation,
+                "extracted_date": result.extracted_date,
+                "page_count": result.page_count,
+                "method": result.method,
+                "confidence": result.confidence,
+                "tasks": [t.model_dump(by_alias=True) for t in result.tasks],
+                "raw_text": result.raw_text
+            }
+            res = conversions_col.insert_one(doc)
+            print(f"[MONGO] Saved conversion with ID: {res.inserted_id}")
+            return str(res.inserted_id)
+        except Exception as e:
+            print(f"[MONGO] Failed to save conversion to MongoDB: {e}")
+    return ""
 
 
 app = FastAPI(title="EarlyBird PDF→Excel Service", version="1.0.0")
@@ -92,8 +138,11 @@ async def convert_pdf(file: UploadFile = File(...)):
             if not raw_text.strip():
                 raise HTTPException(422, "Could not extract any text from the document")
 
-            # Step 3: LLM parsing (Claude API)
+            # Step 3: Local Offline parsing
             result = await parse_tasks_with_llm(raw_text, page_count, method)
+
+            # Save to MongoDB
+            mongo_id = save_conversion_to_db(file.filename, result)
 
             # Step 4: Generate Excel
             xlsx_bytes = generate_excel(result)
@@ -104,6 +153,7 @@ async def convert_pdf(file: UploadFile = File(...)):
                 "success": True,
                 "filename": out_filename,
                 "xlsx_base64": base64.b64encode(xlsx_bytes).decode(),
+                "mongodb_id": mongo_id,
 
                 "summary": {
                     "task_count": len(result.tasks),
@@ -116,7 +166,6 @@ async def convert_pdf(file: UploadFile = File(...)):
                 "result": result.model_dump(by_alias=True)
             }
     except ValueError as ve:
-        # Anthropic key missing or validation error
         raise HTTPException(status_code=400, detail=str(ve))
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Conversion failed: {str(e)}")
@@ -140,7 +189,11 @@ async def generate_excel_endpoint(result: ConversionResult):
 
 @app.get("/health")
 def health():
-    return {"status": "ok", "tesseract": os.path.exists(os.environ.get("TESSERACT_PATH", ""))}
+    return {
+        "status": "ok",
+        "tesseract": os.path.exists(os.environ.get("TESSERACT_PATH", "")),
+        "mongodb_connected": db is not None
+    }
 
 
 if __name__ == "__main__":
