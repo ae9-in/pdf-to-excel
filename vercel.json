@@ -12,8 +12,5 @@
     "src/app/api/generate-excel/route.ts": {
       "maxDuration": 60
     }
-  },
-  "env": {
-    "PYTHON_SERVICE_URL": "@python_service_url"
   }
 }
