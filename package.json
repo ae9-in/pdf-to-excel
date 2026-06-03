@@ -1,0 +1,33 @@
+{
+  "name": "next_temp",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "dev": "npx concurrently -k -n \"next,fastapi\" -c \"cyan,magenta\" \"npm run dev:frontend\" \"npm run dev:backend\"",
+    "dev:frontend": "next dev",
+    "dev:turbo": "next dev --turbo",
+    "dev:webpack": "next dev -- --webpack",
+    "dev:backend": "cd pdf_service && venv\\Scripts\\python.exe main.py",
+    "build": "next build",
+    "start": "next start",
+    "lint": "eslint"
+  },
+  "dependencies": {
+    "jszip": "^3.10.1",
+    "lucide-react": "^1.17.0",
+    "next": "16.2.7",
+    "react": "19.2.4",
+    "react-dom": "19.2.4",
+    "react-dropzone": "^15.0.0"
+  },
+  "devDependencies": {
+    "@tailwindcss/postcss": "^4",
+    "@types/node": "^20",
+    "@types/react": "^19",
+    "@types/react-dom": "^19",
+    "eslint": "^9",
+    "eslint-config-next": "16.2.7",
+    "tailwindcss": "^4",
+    "typescript": "^5"
+  }
+}

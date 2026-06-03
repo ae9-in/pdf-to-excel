@@ -1,0 +1,64 @@
+# ── Node / Next.js ─────────────────────────────────────────
+node_modules/
+.pnp
+.pnp.*
+.yarn/*
+!.yarn/patches
+!.yarn/plugins
+!.yarn/releases
+!.yarn/versions
+
+# Next build output
+.next/
+out/
+build/
+dist/
+
+# Vercel
+.vercel/
+
+# Debug logs
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+.pnpm-debug.log*
+
+# TypeScript
+*.tsbuildinfo
+next-env.d.ts
+
+# ── Python / FastAPI ────────────────────────────────────────
+pdf_service/venv/
+pdf_service/__pycache__/
+pdf_service/*.pyc
+pdf_service/*.pyo
+pdf_service/.pytest_cache/
+pdf_service/verify_converted.xlsx
+
+# ── Environment secrets (NEVER commit) ──────────────────────
+.env
+.env.local
+.env.*.local
+.env.production
+.env.development
+pdf_service/.env
+
+# ── Debug / temp files ──────────────────────────────────────
+extracted_debug.txt
+pdf_raw_text.txt
+
+# ── OS ──────────────────────────────────────────────────────
+.DS_Store
+.DS_Store?
+Thumbs.db
+desktop.ini
+
+# ── IDE ─────────────────────────────────────────────────────
+.vscode/settings.json
+.idea/
+*.suo
+*.user
+
+# ── Misc ────────────────────────────────────────────────────
+*.pem
+coverage/
