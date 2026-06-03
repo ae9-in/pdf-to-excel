@@ -6,6 +6,7 @@ export async function POST(request: Request) {
 
     // Forward to Python service
     const targetUrl = `${process.env.PYTHON_SERVICE_URL || "http://localhost:8000"}/generate_excel`;
+    console.log("[PROXY] Forwarding request to Python service:", targetUrl);
 
     const response = await fetch(targetUrl, {
       method: "POST",

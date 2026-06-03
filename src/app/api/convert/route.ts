@@ -11,6 +11,8 @@ export async function POST(request: Request) {
 
     // Forward to Python service
     const targetUrl = `${process.env.PYTHON_SERVICE_URL || "http://localhost:8000"}/convert`;
+    console.log("[PROXY] Forwarding request to Python service:", targetUrl);
+    
     const backendFormData = new FormData();
     backendFormData.append("file", file);
 
