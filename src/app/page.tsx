@@ -436,7 +436,7 @@ export default function Page() {
               </h2>
               <p className="text-slate-400">
                 Upload your raw task allocation PDF or Word document (.docx/.doc). Our engine extracts people,
-                sprints, and tasks using Claude AI and builds structured, formula-driven
+                sprints, and tasks using a secure offline parsing engine and builds structured, formula-driven
                 sprint Excel dashboards.
               </p>
             </div>
